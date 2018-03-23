@@ -3,13 +3,30 @@ import matplotlib.pyplot as pyplt
 import matplotlib
 import math
 from scipy import stats
+import sys
+from scipy.signal import butter, filtfilt, argrelextrema
+
 
 dirname = "."
 dir_img = "./img/"
+dir_data = "./sample_data/"
+
+script = sys.argv[0]
+filename = sys.argv[1]
+
+# def main():
+#     script = sys.argv[0]
+#     filename = sys.argv[1]
+
+# if __name__ == '__main__':
+#    main()
+
+Core_data = np.loadtxt(filename, skiprows=1)
+#data = Core_data[-5000:-10][:]
+data = Core_data[-10000:][:]
 # filtration of noise inspired by https://stackoverflow.com/questions/28536191/how-to-filter-smooth-with-scipy-numpy
 # See also the documentation on filtfilt here
 # https://docs.scipy.org/doc/scipy-0.14.0/reference/generated/scipy.signal.filtfilt.html
-from scipy.signal import butter, filtfilt, argrelextrema
 
 def butter_lowpass(cutoff, fs, order=5):
     nyq = 0.5 * fs
@@ -29,8 +46,7 @@ fs = 50000
 fig = pyplt.figure(figsize=(10.0,3.0))
 fig.tight_layout()
 
-Core_data = np.loadtxt(fname='2015_12_22_15_44_20_strip.dat', skiprows=1)
-data = Core_data[-5000:-10][:]
+
 
 #Core_data = np.loadtxt(fname='2015_12_21_16_30_06_strip.dat', skiprows=1)
 #data = Core_data[-13000:][:]
@@ -81,6 +97,7 @@ xsecond=0.5*(xfirst[:-1]+xfirst[1:])
 # create a grid for the plots and arrangements of plots
 f = pyplt.figure(figsize=(20,10))
 gs = matplotlib.gridspec.GridSpec(6, 6, hspace=0.8, wspace=0.4)
+f.suptitle("Analysis of "+filename, fontsize=14)
 
 ax1 = f.add_subplot(gs[:2,:3])
 ax2 = f.add_subplot(gs[2:4,:3])
@@ -160,6 +177,9 @@ t_ends = tmaxs[max_index]
 
 pyplt.figure(figsize=(20,10))
 pyplt.plot(time, ysecond_gradient)
+pyplt.title("Selection of second derivative's maxima and minima in "+filename, fontsize=14)
+pyplt.ylabel("Second derivative of resistance with respec to time")
+pyplt.xlabel("time [seconds]")
 pyplt.scatter(tmaxs[max_index],ymaxs[max_index], marker='o', s=100, c='red')
 pyplt.scatter(tmins[min_index],ymins[min_index], marker='o', s=100, c='black')
 pyplt.savefig(dir_img+"/"+"selection_of_maxima"+".png")
@@ -174,6 +194,9 @@ time_mins = np.isin(time,t_beginnings) # finds the position of the real minima b
 time_maxs = np.isin(time,t_ends)
 
 pyplt.figure(figsize=(10,5))
+pyplt.title("Localization of the heating runs in "+filename)
+pyplt.ylabel("Resistance [Ohm]")
+pyplt.xlabel("Time [seconds]")
 pyplt.plot(time,resistance)
 #pyplt.set_ylabel("resistance [Ohm]")
 #pyplt.set_title("Raw Data and filt.filt'ed")
@@ -245,12 +268,16 @@ fit_post_heat = generate_fit_regions(time, t_ends, 120, 'forward')
 
 pyplt.figure(figsize=(10,5))
 
+pyplt.title("Localization of the fitting regions in "+filename)
+pyplt.ylabel("Resistance [Ohm]")
+pyplt.xlabel("Time [seconds]")
 pyplt.plot(time,resistance, linewidth=1.0)
 pyplt.plot(time,y_smooth, color='y', linewidth=3.0)
 pyplt.scatter(time[time_mins],resistance[time_mins], marker ='o', s=100, c='black')
 pyplt.scatter(time[fit_pre_heat[0,]],resistance[fit_pre_heat[0,]], marker ='o', s=100, c='black')
 pyplt.scatter(time[time_maxs],resistance[time_maxs], marker='o', s=100, c='red')
 pyplt.scatter(time[fit_post_heat[1,]],resistance[fit_post_heat[1,]], marker ='o', s=100, c='red')
+
 pyplt.savefig(dir_img+"/"+"localize_fitting_regions"+".png")
 
 
@@ -347,7 +374,7 @@ for i in range(0, len(x2)):
     ax1.plot(time[xmid[i]:x4[i]], line_post[i], color='red', linewidth=3.0)
 #ax1.plot(time,resistance)
 ax1.set_ylabel("resistance [Ohm]")
-ax1.set_title("Automated analysis of file 2015_12_22_15_44_20_strip.dat")
+ax1.set_title("Automated analysis of file "+filename, fontsize=16)
 
 ax2.set_ylim(2e-5,2.8e-5)
 ax2.scatter(time[time_mins],delta_R_over_R, s=200, c='black')
