@@ -26,6 +26,7 @@ Top panel: forward extrapolations (shown in black) and back-extrapolations (show
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | ---|
 | 1600 | 1720 | 1660 | 120 | 1.04e-4 | 5e-5| 10004.5 | bla | bla | 10004.22 | 0.255 | 10004.3 | 2.5 e-5 | 0.30367314 |
 | 1900 | 2020 | 1960 | 120 | 1.05e-4 | 5.2e-5| 10004.2 | bla | bla | 10002.12 |0.245 | 10004.24 | 2.45 e-5 | 0.2772314 |
+
 where slopes control is a tentative estimator of the thermal equilibrium of the system when passing from the temperature drift that it had before the heating and after heating is completed.
 
 
