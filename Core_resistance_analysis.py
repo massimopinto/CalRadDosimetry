@@ -10,20 +10,16 @@ from scipy.signal import butter, filtfilt, argrelextrema
 dirname = "."
 dir_img = "./img/"
 dir_data = "./sample_data/"
+PREFIX_LENGTH = 14 # To strip off the "dir_data" part of the filename
+POSTFIX_LENGTH = -10
 
 script = sys.argv[0]
 filename = sys.argv[1]
 
-# def main():
-#     script = sys.argv[0]
-#     filename = sys.argv[1]
-
-# if __name__ == '__main__':
-#    main()
-
 Core_data = np.loadtxt(filename, skiprows=1)
 #data = Core_data[-5000:-10][:]
 data = Core_data[-10000:][:]
+#data = Core_data[10000:][:]
 # filtration of noise inspired by https://stackoverflow.com/questions/28536191/how-to-filter-smooth-with-scipy-numpy
 # See also the documentation on filtfilt here
 # https://docs.scipy.org/doc/scipy-0.14.0/reference/generated/scipy.signal.filtfilt.html
@@ -42,15 +38,6 @@ def butter_lowpass_filtfilt(data, cutoff, fs, order=5):
 # Parameters used for the filtration of noisy data
 cutoff = 1500
 fs = 50000
-
-fig = pyplt.figure(figsize=(10.0,3.0))
-fig.tight_layout()
-
-
-
-#Core_data = np.loadtxt(fname='2015_12_21_16_30_06_strip.dat', skiprows=1)
-#data = Core_data[-13000:][:]
-
 
 time = data[:,0]
 resistance = data[:,1]
@@ -94,6 +81,11 @@ minima = argrelextrema(ysecond_gradient, np.less)
 # the corresponding values of x are: 
 xsecond=0.5*(xfirst[:-1]+xfirst[1:])
 
+pyplt.figure(figsize=(10,5))
+pyplt.plot(time, resistance)
+#pyplt.show()
+pyplt.savefig(dir_img+"glance_"+filename[PREFIX_LENGTH:POSTFIX_LENGTH]+".png")
+
 # create a grid for the plots and arrangements of plots
 f = pyplt.figure(figsize=(20,10))
 gs = matplotlib.gridspec.GridSpec(6, 6, hspace=0.8, wspace=0.4)
@@ -113,32 +105,10 @@ ax1.set_ylabel("resistance [Ohm]")
 ax1.set_title("Raw Data and filt.filt'ed")
 ax1.plot(time,y_smooth, color='y', linewidth=3.0)
 
-ax1.axvline(x=65062, color='r')
-ax2.axvline(x=65062, color='r')
-ax3.axvline(x=65062, color='r')
-ax4.axvline(x=65062, color='r')
-ax5.axvline(x=65062, color='r')
-ax6.axvline(x=65062, color='r')
-
-ax1.axvline(x=65182, color='green')
-ax2.axvline(x=65182, color='green')
-ax3.axvline(x=65182, color='green')
-ax4.axvline(x=65182, color='green')
-ax5.axvline(x=65182, color='green')
-ax6.axvline(x=65182, color='green')
-
-#ax2.set_title("Original data, smoothed using filt.filt")
-#ax2.plot(time,y_smooth)
-
 ax2.plot(xfirst,yfirst)
-#ax3.plot(time,yfirst)
-#ax2.set_ylabel("dy/dx")
-#ax2.set_xlabel("Time [s]")
 ax2.set_title("First Derivative on filtered data with np.diff")
 
 ax3.plot(xsecond,ysecond)
-#ax4.plot(time,ysecond)
-#ax3.set_ylabel("d2y/d2x")
 ax3.set_xlabel("Time [s]")
 ax3.set_title("Second Derivative on filtered data with np.diff(array,1)")
 
@@ -155,13 +125,12 @@ ax6.scatter(time[minima],ysecond_gradient[minima], marker='o', linestyle='None',
 
 ax6.set_title("(filtered) Second Derivative on filtered data with np.gradient(array,2) and filt.filt'ered")
 
-pyplt.savefig(dir_img+"/"+"derivate_filters"+".png")
+pyplt.savefig(dir_img+"/"+"derivate_filters_"+filename[PREFIX_LENGTH:POSTFIX_LENGTH]+".png")
 # pyplt.show()
 
 # ## Selection of "correct" maxima and minima in the second derivative
 # At this point we have a series of maxima and minima, but only the **larger** maxima and minima, in module, are the ones poiting at the end and the beginning of the heating runs, respectively. The smaller maxima and minima in between are artefact of the filtering that was applied to the data. What you really need then is to make a selection of those maxima and minima that will point you to the heating runs.
 # Let's first try with a selection based on the value of the maxima and the minima.
-
 
 ymins = ysecond_gradient[minima] # subselection of ysecond_gradient
 tmins = time[minima] # subselection of time
@@ -182,9 +151,8 @@ pyplt.ylabel("Second derivative of resistance with respec to time")
 pyplt.xlabel("time [seconds]")
 pyplt.scatter(tmaxs[max_index],ymaxs[max_index], marker='o', s=100, c='red')
 pyplt.scatter(tmins[min_index],ymins[min_index], marker='o', s=100, c='black')
-pyplt.savefig(dir_img+"/"+"selection_of_maxima"+".png")
+pyplt.savefig(dir_img+"/"+"selection_of_maxima_"+filename[PREFIX_LENGTH:POSTFIX_LENGTH]+".png")
 #pyplt.plot
-
 
 # ## Identification of the beginning and the end of each run on the resistance plots
 # The _minima_ of the second derivative, after appropriate polishing for the artefacts introduced by differentation of noisy data, are useful to identify the _beginning_ of a haeting run, while the _maxima_ correspond to the _end_ of the heating run. However maxima and minima of the second derivative are much smaller arrays than the original `time` and `resistance` arrays, so first one needs to locate the index values of these minima and maxima on the original arrays. 
@@ -198,24 +166,18 @@ pyplt.title("Localization of the heating runs in "+filename)
 pyplt.ylabel("Resistance [Ohm]")
 pyplt.xlabel("Time [seconds]")
 pyplt.plot(time,resistance)
-#pyplt.set_ylabel("resistance [Ohm]")
-#pyplt.set_title("Raw Data and filt.filt'ed")
 pyplt.plot(time,y_smooth, color='y', linewidth=2.0)
 pyplt.scatter(time[time_mins],resistance[time_mins], marker ='o', s=100, c='black')
 pyplt.scatter(time[time_maxs],resistance[time_maxs], marker='o', s=100, c='red')
-pyplt.savefig(dir_img+"/"+"localizing_starts_ends"+".png")
-
+pyplt.savefig(dir_img+"/"+"localizing_starts_ends_"+filename[PREFIX_LENGTH:POSTFIX_LENGTH]+".png")
 
 # ## Linear regressions and extrapolations to the mid-run
 # As common in graphite calorimetry for radiation dosimetry, the _relative resistance change_ during the heating run is determined via a _forward extrapolation_ of the pre-heating trend, and a _backwards extrapolation_ of the post-heating trend, both at _mid-run_. These trends are determined via linear fitting of the corresponding trend data over a time span of 120". The linear fitting data, the extrapolations, and further computations will be saved in a proper array (or list?)
-
 
 assert len(t_beginnings) == len(t_ends), 'Number of minima and maxima is not equal. Cannot define heating runs.'
 heating_times = t_ends - t_beginnings
 pos = heating_times > 0 
 assert pos.all(), 'Heating time returned negative in one heating cycle. Cannot calculate deltaR/R'
-
-
 
 def find_nearest(array,value):
     '''Returns the index of the element of an array that is neares to a value'''
@@ -226,8 +188,6 @@ def find_nearest(array,value):
     else:
         #return array[idx]
         return idx
-
-
 
 
 def generate_fit_regions(array, fit_margin, span=120, direction='backwards'):
@@ -278,7 +238,7 @@ pyplt.scatter(time[fit_pre_heat[0,]],resistance[fit_pre_heat[0,]], marker ='o', 
 pyplt.scatter(time[time_maxs],resistance[time_maxs], marker='o', s=100, c='red')
 pyplt.scatter(time[fit_post_heat[1,]],resistance[fit_post_heat[1,]], marker ='o', s=100, c='red')
 
-pyplt.savefig(dir_img+"/"+"localize_fitting_regions"+".png")
+pyplt.savefig(dir_img+"/"+"localize_fitting_regions_"+filename[PREFIX_LENGTH:POSTFIX_LENGTH]+".png")
 
 
 # ### Organization of output data in columns 
@@ -326,42 +286,12 @@ slopes_control = abs(abs(results[4,]-abs(results[7,]))) / (0.5*(abs(results[4,]+
 
 results = np.vstack((results, delta_R, R_mid_average, delta_R_over_R, slopes_control))
 
-#slope, intercept, r_value, p_value, std_err = np.empty([len(half_runs)], dtype=float)
-#slope, intercept, r_value, p_value, std_err = stats.linregress(time[x1[0]:x2[0]],resistance[x1[0]:x2[0]])
-#fit_results[:,0] = stats.linregress(time[x1[0]:x2[0]],resistance[x1[0]:x2[0]])
-#line1 = slope*time[x1[0]:xmid[0]]+intercept # ok thus far, though you now need to extrapolate.
-
 # create a list of numpy arrays of variable lenghts, each corresponding to a best fit line
 line_pre = [] # empty
 line_post = [] 
 for i in range(0, len(x2)):
     line_pre.append(fit_results_pre[0,i]*time[x1[i]:xmid[i]] + fit_results_pre[1,i])
     line_post.append(fit_results_post[0,i]*time[xmid[i]:x4[i]] + fit_results_post[1,i])
-
-#line1 = fit_results[0,0]*time[x1[0]:xmid[0]]+fit_results[1,0]
-#line2 = fit_results[0,1]*time[x1[1]:xmid[1]]+fit_results[1,1]
-#line3 = fit_results[0,2]*time[x1[2]:xmid[2]]+fit_results[1,2]
-#line1 = fit_results[0,]*time[x1:xmid]+fit_results[1,]
-
-#%matplotlib inline
-#pyplt.figure(figsize=(10,5))
-#pyplt.plot(time,resistance, linewidth=1.0)
-
-#pyplt.plot(time,y_smooth, color='y', linewidth=3.0)
-#pyplt.scatter(time[time_mins],resistance[time_mins], marker ='o', s=100, c='black')
-#pyplt.scatter(time[fit_pre_heat[0,]],resistance[fit_pre_heat[0,]], marker ='o', s=100, c='black')
-#pyplt.scatter(time[time_maxs],resistance[time_maxs], marker='o', s=100, c='red')
-#pyplt.scatter(time[fit_post_heat[1,]],resistance[fit_post_heat[1,]], marker ='o', s=100, c='red')
-
-# _for_ cycle to generate multiple linear fit graphical representations
-#for i in range(0, len(x2)):
-#    pyplt.plot(time[x1[i]:xmid[i]], line_pre[i], color='black', linewidth=3.0)
-#    pyplt.plot(time[xmid[i]:x4[i]], line_post[i], color='red', linewidth=3.0)
-# pyplt.plot(time[x1[0]:xmid[0]], line1, color='orange', linewidth=3.0)
-# pyplt.plot(time[x1[1]:xmid[1]], line2, color='orange', linewidth=3.0)
-# pyplt.plot(time[x1[2]:xmid[2]], line3, color='orange', linewidth=3.0)
-# print(line)
-# print('deltaR_results: ', deltaR_results)
 
 results_fig = pyplt.figure(figsize=(20,10))
 results_grid = matplotlib.gridspec.GridSpec(2, 1, hspace=0.2, wspace=0.1)
@@ -381,18 +311,4 @@ ax2.scatter(time[time_mins],delta_R_over_R, s=200, c='black')
 ax2.set_ylabel("deltaR / R [Ohm / Ohm]")
 ax2.set_xlabel("time [seconds]")
 
-pyplt.savefig(dir_img+"/"+"final_results"+".png")
-#pyplt.show()
-
-# pyplt.figure(figsize=(10,5))
-#pyplt.autoscale(axis='y', tight=True)
-# pyplt.ylim(2e-5,2.8e-5)
-# pyplt.scatter(time[time_mins],delta_R_over_R)
-
-# pyplt.figure(figsize=(10,5))
-# pyplt.ylim(2e-5,2.8e-5)
-#pyplt.autoscale(axis='y', tight=True)
-# pyplt.scatter(slopes_control,delta_R_over_R)
-
-#pyplt.hist(delta_R_over_R, bins='auto')
-
+pyplt.savefig(dir_img+"/"+"final_results_"+filename[PREFIX_LENGTH:POSTFIX_LENGTH]+".png")

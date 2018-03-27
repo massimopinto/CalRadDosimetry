@@ -39,9 +39,14 @@ Top panel: forward extrapolations (shown in black) and back-extrapolations (show
 where slopes control is a tentative estimator of the thermal equilibrium of the system when passing from the temperature drift that it had before the heating and after heating is completed.
 **To do**: Output to a data file for further processing.
 
+**To do** Results from each region should be presented in a grid of individual plots containing a few essential data:
+![focus on one pair of linear regressions and estimations of the relative resistance change](./img/individual_fits.png)
 
+**To do**
+The grid would look a little like this:
+![Linear regressions and estimations of the relative resistance change](./img/faceted_plots.png) 
 ### Reference
 
 1.	Pinto M, Pimpinella M, Quini M, D'Arienzo M, Astefanoaei I, Loreti S, et al. A graphite calorimeter for absolute measurements of absorbed dose to water: application in medium-energy x-ray filtered beams. Phys Med Biol. IOP Publishing; 2016 Feb 21;61(4):1738–64. DOI: [10.1088/0031-9155/61/4/1738](http://dx.doi.org/10.1088/0031-9155/61/4/1738)
 
-2.	de Prez L, de Pooter JA, Jansen B, Aalbers T. A water calorimeter for on-site absorbed dose to water calibrations in 60Co and MV-photon beams including MRI incorporated treatment equipment. Phys Med Biol. IOP Publishing; 2016 Jun 14;61(13):5051–76. DOI: [10.1088/0031-9155/61/13/5051](http://dx.doi.org/10.1088/0031-9155/61/13/5051) 
+2.	de Prez L, de Pooter JA, Jansen B, Aalbers T. A water calorimeter for on-site absorbed dose to water calibrations in 60Co and MV-photon beams including MRI incorporated treatment equipment. Phys Med Biol. IOP Publishing; 2016 Jun 14;61(13):5051–76. DOI: [10.1088/0031-9155/61/13/5051](http://dx.doi.org/10.1088/0031-9155/61/13/5051)
