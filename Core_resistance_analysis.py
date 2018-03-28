@@ -17,8 +17,8 @@ script = sys.argv[0]
 filename = sys.argv[1]
 
 Core_data = np.loadtxt(filename, skiprows=1)
-#data = Core_data[-5000:-10][:]
-data = Core_data[-10000:][:]
+data = Core_data[-5000:-10][:]
+#data = Core_data[-10000:][:]
 #data = Core_data[10000:][:]
 # filtration of noise inspired by https://stackoverflow.com/questions/28536191/how-to-filter-smooth-with-scipy-numpy
 # See also the documentation on filtfilt here
@@ -82,7 +82,7 @@ minima = argrelextrema(ysecond_gradient, np.less)
 xsecond=0.5*(xfirst[:-1]+xfirst[1:])
 
 pyplt.figure(figsize=(10,5))
-pyplt.plot(time, resistance)
+pyplt.scatter(time,resistance, marker ='o', s=4, c='blue')
 #pyplt.show()
 pyplt.savefig(dir_img+"glance_"+filename[PREFIX_LENGTH:POSTFIX_LENGTH]+".png")
 
@@ -231,7 +231,8 @@ pyplt.figure(figsize=(10,5))
 pyplt.title("Localization of the fitting regions in "+filename)
 pyplt.ylabel("Resistance [Ohm]")
 pyplt.xlabel("Time [seconds]")
-pyplt.plot(time,resistance, linewidth=1.0)
+
+pyplt.scatter(time,resistance, marker ='o', s=4, c='blue')
 pyplt.plot(time,y_smooth, color='y', linewidth=3.0)
 pyplt.scatter(time[time_mins],resistance[time_mins], marker ='o', s=100, c='black')
 pyplt.scatter(time[fit_pre_heat[0,]],resistance[fit_pre_heat[0,]], marker ='o', s=100, c='black')
@@ -287,22 +288,25 @@ slopes_control = abs(abs(results[4,]-abs(results[7,]))) / (0.5*(abs(results[4,]+
 results = np.vstack((results, delta_R, R_mid_average, delta_R_over_R, slopes_control))
 
 # create a list of numpy arrays of variable lenghts, each corresponding to a best fit line
-line_pre = [] # empty
-line_post = [] 
+line_pre = [[],[]] # empty list of two empty lists for pre- and post-drift best fit lines
+line_post = [[],[]] 
 for i in range(0, len(x2)):
-    line_pre.append(fit_results_pre[0,i]*time[x1[i]:xmid[i]] + fit_results_pre[1,i])
-    line_post.append(fit_results_post[0,i]*time[xmid[i]:x4[i]] + fit_results_post[1,i])
+    line_pre[0].append(time[x1[i]:xmid[i]]) # the times
+    line_pre[1].append(fit_results_pre[0,i]*time[x1[i]:xmid[i]] + fit_results_pre[1,i]) # the best fit lines
+    line_post[0].append(time[xmid[i]:x4[i]])
+    line_post[1].append(fit_results_post[0,i]*time[xmid[i]:x4[i]] + fit_results_post[1,i])
 
 results_fig = pyplt.figure(figsize=(20,10))
 results_grid = matplotlib.gridspec.GridSpec(2, 1, hspace=0.2, wspace=0.1)
 ax1 = results_fig.add_subplot(results_grid[0,0])
 ax2 = results_fig.add_subplot(results_grid[1,0])
 
-ax1.plot(time,resistance, linewidth=1.0)
+ax1.scatter(time,resistance, marker ='o', s=4, c='blue')
+
 for i in range(0, len(x2)):
-    ax1.plot(time[x1[i]:xmid[i]], line_pre[i], color='black', linewidth=3.0)
-    ax1.plot(time[xmid[i]:x4[i]], line_post[i], color='red', linewidth=3.0)
-#ax1.plot(time,resistance)
+    ax1.plot(line_pre[0][i], line_pre[1][i], color='black', linewidth=3.0)
+    ax1.plot(line_post[0][i], line_post[1][i], color='red', linewidth=3.0)
+
 ax1.set_ylabel("resistance [Ohm]")
 ax1.set_title("Automated analysis of file "+filename, fontsize=16)
 
@@ -312,3 +316,43 @@ ax2.set_ylabel("deltaR / R [Ohm / Ohm]")
 ax2.set_xlabel("time [seconds]")
 
 pyplt.savefig(dir_img+"/"+"final_results_"+filename[PREFIX_LENGTH:POSTFIX_LENGTH]+".png")
+
+
+# Iteration over the number of linear regressions, to create a corresponding grid of plots
+# Based on a question that I address on StackExchange. Similar to the ggplot2 graphs in R.
+
+XEDGE = 60
+numplots = len(x4) # number of plots to create
+m = 4         # number of columns
+n = int(np.ceil(numplots/4.)) # number of rows
+
+fig, axes = pyplt.subplots(nrows=n,ncols=m)
+fig.subplots_adjust(hspace=0.2, wspace=0.3)
+fig.set_size_inches(20,10)
+fig.suptitle("Summary of all runs in "+filename[PREFIX_LENGTH:POSTFIX_LENGTH], fontsize=15)
+
+for xpre, ypre, xpost, ypost, res, ax in zip(line_pre[0], line_pre[1], line_post[0], line_post[1], results.T, axes.flatten()):
+    ax.plot(xpre, ypre, color='black', linewidth=3.0)
+    ax.plot(xpost, ypost, color='red', linewidth=3.0)
+    ax.set_xlim(xpre[0]-XEDGE,xpost[-1]+XEDGE) # a little space on the x sides
+    ax.set_ylim(ypost[0]-(ypre[-1]-ypost[0])*0.12, ypre[-1]+(ypre[-1]-ypost[0])*0.12) # always centered on y axis
+    ax.scatter(time,resistance, marker ='o', s=20, c='blue')
+    pyplt.text(0.99,0.8, "ID: "+res[0].astype(int).astype('str'), transform=ax.transAxes, horizontalalignment='right')
+    pyplt.text(0.99,0.75, "DeltaR/R: "+res[-2].astype('str')[:6]+"e-5", transform=ax.transAxes, horizontalalignment='right')
+    pyplt.text(0.99,0.7, "Slope delta %: "+res[-1].astype('str')[:4], transform=ax.transAxes, horizontalalignment='right')
+    pyplt.text(0.01,0.95, "Slope pre: "+(res[4]*1000).astype('str')[:6]+" mOhm/s", transform=ax.transAxes, horizontalalignment='left')
+    pyplt.text(0.99,0.03, "Slope post: "+(res[7]*1000).astype('str')[:6]+" mOhm/s", transform=ax.transAxes, horizontalalignment='right')
+        
+    if ax == axes.flatten()[0]:
+        ax.set_ylabel("resistance [Ohm]")
+            
+# optionally, remove empty plots from grid
+if n*m > numplots:
+    for ax in axes.flatten()[numplots:]:
+        ax.remove()
+        ##or 
+        #ax.set_visible(False)
+
+axes.flatten()[-1].set_xlabel("time [seconds]")
+
+pyplt.savefig(dir_img+"/"+"faceted_plots_"+filename[PREFIX_LENGTH:POSTFIX_LENGTH]+".png")
