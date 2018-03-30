@@ -356,3 +356,6 @@ if n*m > numplots:
 axes.flatten()[-1].set_xlabel("time [seconds]")
 
 pyplt.savefig(dir_img+"/"+"faceted_plots_"+filename[PREFIX_LENGTH:POSTFIX_LENGTH]+".png")
+
+formato = ['%6i', '%6i', '%.2f', '%.2f', '%1.4e', '%1.4e', '%.4f', '%1.4e', '%1.4e', '%.4f', '%.4f', '%.4f', '%1.4e', '%.4f']
+np.savetxt(dir_data+filename[PREFIX_LENGTH:POSTFIX_LENGTH]+"_results.out", results.T, fmt=formato, delimiter=', ', newline='\n', header='prova')

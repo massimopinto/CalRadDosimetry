@@ -7,7 +7,10 @@ one is interested in measuring the _relative variation of the resistance value_ 
 
 The relative variation of the resistance value of a thermistor is estimated, for _each_ heating run, via a _combined extrapolation_ procedure. The process is described in Pinto (2016) and De Prez (2016). Since the amount of manual operations can result in an extremely tedious and tiring task, a solution is presented here to automate such tasks.
 
-#### Use of the python code (.py)
+#### To view the notebook (.ipynb), with graphs
+To _render_ the Jupyter Notebook, please use the [Jupyter Notebook viewer](http://nbviewer.jupyter.org/) at [this notebook link](http://nbviewer.jupyter.org/github/massimopinto/CalRadDosimetry/blob/master/Core_resistance_analysis.ipynb).
+
+#### How to run the python code (.py)
 
 ```bash
 $> python3 Core_resistance_analysis.py input_data.dat
